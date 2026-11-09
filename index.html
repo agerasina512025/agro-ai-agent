@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Колос — ИИ-агент продаж «Степной контур»</title>
+  <meta name="description" content="Демонстрационная модель ИИ-агента отдела продаж агропредприятия: подбор партии, расчёт, КП и заявки.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 27V12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M16 18c-5.2 0-8.4-3.2-8.4-7.4 5.2 0 8.4 3.2 8.4 7.4Z" fill="currentColor" opacity=".9"/>
+            <path d="M16 13.6c0-4.4 3.3-7.6 8.4-7.6 0 4.4-3.3 7.6-8.4 7.6Z" fill="currentColor" opacity=".55"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <strong>Степной контур</strong>
+          <span>ИИ-агент продаж «Колос»</span>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Разделы">
+        <button class="tab is-active" data-view="chat">Диалог</button>
+        <button class="tab" data-view="leads">Лиды <span class="tab-count" id="leads-count">0</span></button>
+        <button class="tab" data-view="kb">База знаний</button>
+      </nav>
+
+      <div class="top-actions">
+        <span class="demo-pill"><i></i>Демо-модель</span>
+        <button class="icon-btn" id="reset-btn" title="Начать новый диалог" aria-label="Начать новый диалог">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 11a8 8 0 1 0-2.3 5.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M20 4v7h-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace" id="workspace" data-view="chat">
+      <aside class="sidebar">
+        <div class="company-card">
+          <div class="eyebrow">Агропредприятие</div>
+          <div class="company-name">ООО «Степной контур»</div>
+          <p>Растениеводство полного цикла: поле, элеватор, собственная логистика.</p>
+          <div class="company-stats">
+            <span><b>14 500</b> га</span>
+            <span><b>60 000</b> т элеватор</span>
+            <span><b>18</b> машин</span>
+          </div>
+        </div>
+
+        <div class="side-section">
+          <div class="side-title">Быстрый старт</div>
+          <button class="scenario" data-prompt="Каталог и цены">
+            <span>Каталог и цены</span><i>→</i>
+          </button>
+          <button class="scenario" data-prompt="Пшеница 3 класса, 500 т в Краснодар">
+            <span>Партия 500 т в Краснодар</span><i>→</i>
+          </button>
+          <button class="scenario" data-prompt="Условия оплаты и отсрочка">
+            <span>Оплата и отсрочка</span><i>→</i>
+          </button>
+          <button class="scenario" data-prompt="Подготовить КП на 300 т подсолнечника">
+            <span>КП на подсолнечник</span><i>→</i>
+          </button>
+        </div>
+
+        <div class="side-section">
+          <div class="side-title">Что умеет агент</div>
+          <ul class="cap-list">
+            <li>Подбирает культуру под задачу</li>
+            <li>Считает партию, скидку и доставку</li>
+            <li>Формирует коммерческое предложение</li>
+            <li>Собирает заявку и передаёт менеджеру</li>
+            <li>Отвечает по качеству и документам</li>
+          </ul>
+        </div>
+
+        <div class="side-note">
+          Демонстрационная модель. Компания, цены и контакты вымышлены.<br>
+          <a href="Возможности_ИИ-агента_Колос.pdf" target="_blank" rel="noopener">PDF о возможностях агента →</a>
+        </div>
+      </aside>
+
+      <section class="view view-chat" aria-label="Диалог с агентом">
+        <div class="chat-panel">
+          <div class="chat-head">
+            <div class="agent-id">
+              <div class="avatar agent-avatar">К</div>
+              <div class="agent-name">
+                <strong>Колос</strong>
+                <span><i class="online-dot"></i>ИИ-агент · отвечает сразу</span>
+              </div>
+            </div>
+            <div class="chat-meta">12 позиций в базе · цены с НДС</div>
+          </div>
+
+          <div class="chat-scroll" id="chat-scroll" aria-live="polite">
+            <div class="chat-day" id="chat-day">Сегодня</div>
+            <div id="messages"></div>
+          </div>
+
+          <div class="suggestions" id="suggestions" aria-label="Быстрые ответы"></div>
+
+          <form class="composer" id="composer" autocomplete="off">
+            <textarea id="input" rows="1" placeholder="Культура, объём, регион" aria-label="Сообщение агенту"></textarea>
+            <button class="send-btn" type="submit" aria-label="Отправить сообщение">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 12 20 4l-3.2 16-5.4-6.4L4 12Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m11.4 13.6 4.4-4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </button>
+          </form>
+          <div class="composer-note">Демо-модель. Перед сделкой условия подтверждает менеджер.</div>
+        </div>
+      </section>
+
+      <aside class="deal-panel" aria-label="Карточка сделки">
+        <div class="deal-head">
+          <span>Карточка сделки</span>
+          <span class="stage-pill" id="deal-stage">Новый</span>
+        </div>
+
+        <div class="deal-product">
+          <span class="deal-label">Продукт</span>
+          <div class="deal-value" id="deal-product">Пока не выбран</div>
+          <div class="deal-sub" id="deal-product-sub">Начните с культуры и объёма</div>
+        </div>
+
+        <div class="deal-grid">
+          <div><span>Объём</span><b id="deal-volume">—</b></div>
+          <div><span>Регион</span><b id="deal-zone">—</b></div>
+          <div><span>Оплата</span><b id="deal-payment">—</b></div>
+          <div><span>Скидка</span><b id="deal-discount">—</b></div>
+        </div>
+
+        <div class="deal-total">
+          <span id="deal-total-label">Сумма с доставкой</span>
+          <b id="deal-total">—</b>
+          <small id="deal-total-sub">Появится после расчёта партии</small>
+        </div>
+
+        <div class="score-row">
+          <div class="score-ring" id="score-ring" style="--score:0"><span id="score-val">0</span></div>
+          <div class="score-text">
+            <b id="score-label">Соберите вводные</b>
+            <span>Культура, объём, регион и контакт повышают готовность лида.</span>
+          </div>
+        </div>
+
+        <button class="btn primary deal-cta" id="deal-cta" type="button">Оформить заявку</button>
+
+        <div class="steps" id="deal-steps">
+          <div class="step is-active" data-step="interest"><i></i><span>Интерес</span></div>
+          <div class="step" data-step="quote"><i></i><span>Расчёт</span></div>
+          <div class="step" data-step="lead"><i></i><span>Заявка</span></div>
+        </div>
+      </aside>
+
+      <section class="view view-leads" aria-label="Лиды">
+        <div class="page-head">
+          <div>
+            <h1>Лиды отдела продаж</h1>
+            <p>Заявки из диалога с агентом и демонстрационные примеры. Статусы сохраняются в браузере.</p>
+          </div>
+          <button class="btn ghost" id="export-csv" type="button">Экспорт CSV</button>
+        </div>
+
+        <div class="kpi-row">
+          <div class="kpi"><span>Всего лидов</span><b id="kpi-leads">0</b><small>в демо-базе</small></div>
+          <div class="kpi"><span>Сумма пайплайна</span><b id="kpi-sum">0 ₽</b><small>по расчётам агента</small></div>
+          <div class="kpi"><span>Средний скоринг</span><b id="kpi-score">0</b><small>из 100</small></div>
+          <div class="kpi accent"><span>Горячих</span><b id="kpi-hot">0</b><small>скоринг 75+</small></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-scroll">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Заявка</th>
+                  <th>Клиент</th>
+                  <th>Продукт</th>
+                  <th>Объём</th>
+                  <th>Сумма</th>
+                  <th>Скоринг</th>
+                  <th>Статус</th>
+                </tr>
+              </thead>
+              <tbody id="leads-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="view view-kb" aria-label="База знаний">
+        <div class="page-head">
+          <div>
+            <h1>База знаний агента</h1>
+            <p>12 товарных позиций, 10 типовых вопросов, условия оплаты и логистики. Данные вымышлены для демонстрации.</p>
+          </div>
+        </div>
+
+        <div class="kb-toolbar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <input id="kb-search" type="search" placeholder="Поиск по культуре или показателю" aria-label="Поиск по базе знаний">
+          </div>
+          <div class="chips" id="kb-cats"></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-scroll">
+            <table class="kb-table">
+              <thead>
+                <tr>
+                  <th>Позиция</th>
+                  <th>Категория</th>
+                  <th>Цена, ₽/т</th>
+                  <th>В наличии</th>
+                  <th>Мин. партия</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="kb-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <h2 class="section-h">Частые вопросы</h2>
+        <div class="faq-list" id="faq-list"></div>
+
+        <h2 class="section-h">Условия работы</h2>
+        <div class="terms-grid" id="terms-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="offer-modal" hidden>
+    <div class="modal-backdrop" data-close-offer></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Коммерческое предложение">
+      <div class="modal-actions">
+        <button class="btn ghost" id="offer-print" type="button">Печать / PDF</button>
+        <button class="btn ghost" id="offer-download" type="button">Скачать HTML</button>
+        <button class="icon-btn" data-close-offer type="button" aria-label="Закрыть">
+          <svg viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div id="offer-doc"></div>
+    </div>
+  </div>
+
+  <script src="assets/js/knowledge-base.js"></script>
+  <script src="assets/js/agent.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
